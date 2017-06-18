@@ -10,18 +10,15 @@ import (
 
 func TestArchive(t *testing.T) {
 	var assert = assert.New(t)
-
 	folder, err := ioutil.TempDir("", "archivetest")
 	assert.NoError(err)
-
 	empty, err := os.Create(folder + "/empty.txt")
 	assert.NoError(err)
-
 	assert.NoError(os.Mkdir(folder+"/folder-inside", 0755))
 
 	for _, archive := range []Archive{
-		newTar(folder, t),
-		newZip(folder, t),
+		newArchive(folder, "tar.gz", t),
+		newArchive(folder, "zip", t),
 	} {
 		assert.NoError(archive.Add("empty.txt", empty.Name()))
 		assert.NoError(archive.Add("empty.txt", folder+"/folder-inside"))
@@ -30,14 +27,8 @@ func TestArchive(t *testing.T) {
 	}
 }
 
-func newZip(folder string, t *testing.T) Archive {
-	file, err := os.Create(folder + "/folder.zip")
+func newArchive(folder, format string, t *testing.T) Archive {
+	file, err := os.Create(folder + "/folder." + format)
 	assert.NoError(t, err)
-	return NewZip(file)
-}
-
-func newTar(folder string, t *testing.T) Archive {
-	file, err := os.Create(folder + "/folder.tar.gz")
-	assert.NoError(t, err)
-	return NewTargz(file)
+	return New(file)
 }

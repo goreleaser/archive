@@ -4,6 +4,8 @@ package archive
 import (
 	"os"
 
+	"path/filepath"
+
 	"github.com/goreleaser/archive/tar"
 	"github.com/goreleaser/archive/zip"
 )
@@ -14,12 +16,12 @@ type Archive interface {
 	Add(name, path string) error
 }
 
-// NewZip returns an archive instance capable of compressing in zip format
-func NewZip(file *os.File) Archive {
-	return zip.New(file)
-}
-
-// NewTargz returns an archive instance capable of compressing in tar.gz format
-func NewTargz(file *os.File) Archive {
+// New archive
+// If the exentions of the target file is .zip, the archive will be in the zip
+// format, otherwise, it will be a tar.gz archive.
+func New(file *os.File) Archive {
+	if filepath.Ext(file.Name()) == ".zip" {
+		return zip.New(file)
+	}
 	return tar.New(file)
 }
