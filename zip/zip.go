@@ -36,7 +36,11 @@ func (a Archive) Add(name, path string) (err error) {
 		return
 	}
 	defer func() { _ = file.Close() }()
-	f, err := a.z.Create(name)
+
+	header := new(zip.FileHeader)
+	header.Name = name
+	header.SetMode(stat.Mode())
+	f, err := a.z.CreateHeader(header)
 	if err != nil {
 		return err
 	}
