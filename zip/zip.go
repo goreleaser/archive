@@ -38,6 +38,7 @@ func (a Archive) Add(name, path string) (err error) {
 	defer func() { _ = file.Close() }()
 
 	header, err := zip.FileInfoHeader(stat)
+	header.Method = zip.Deflate
 	if err != nil {
 		return err
 	}
