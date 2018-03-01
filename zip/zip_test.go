@@ -37,6 +37,7 @@ func TestTarGzFile(t *testing.T) {
 	assert.NoError(err)
 	assert.Truef(info.Size() < 500, "archived file should be smaller than %d", info.Size())
 	r, err := zip.NewReader(f, info.Size())
+	assert.NoError(err)
 	var paths []string
 	for _, zf := range r.File {
 		paths = append(paths, zf.Name)

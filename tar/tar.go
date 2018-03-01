@@ -24,7 +24,7 @@ func (a Archive) Close() error {
 }
 
 // New tar.gz archive
-func New(target *os.File) Archive {
+func New(target io.Writer) Archive {
 	gw := gzip.NewWriter(target)
 	tw := tar.NewWriter(gw)
 	return Archive{
@@ -49,7 +49,7 @@ func (a Archive) Add(name, path string) error {
 		return err
 	}
 	header.Name = name
-	if err := a.tw.WriteHeader(header); err != nil {
+	if err = a.tw.WriteHeader(header); err != nil {
 		return err
 	}
 	if info.IsDir() {

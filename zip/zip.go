@@ -19,7 +19,7 @@ func (a Archive) Close() error {
 }
 
 // New zip archive
-func New(target *os.File) Archive {
+func New(target io.Writer) Archive {
 	return Archive{
 		z: zip.NewWriter(target),
 	}

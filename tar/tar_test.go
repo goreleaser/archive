@@ -18,7 +18,7 @@ func TestTarGzFile(t *testing.T) {
 	assert.NoError(err)
 	f, err := os.Create(filepath.Join(tmp, "test.tar.gz"))
 	assert.NoError(err)
-	defer f.Close()
+	defer f.Close() // nolint: errcheck
 	archive := New(f)
 
 	assert.Error(archive.Add("nope.txt", "../testdata/nope.txt"))
