@@ -1,36 +1,48 @@
 package zip
 
 import (
+	"archive/zip"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestZipFile(t *testing.T) {
+func TestTarGzFile(t *testing.T) {
 	var assert = assert.New(t)
-
-	folder, err := ioutil.TempDir("", "ziptest")
+	tmp, err := ioutil.TempDir("", "")
 	assert.NoError(err)
-
-	file, err := os.Create(folder + "/folder.zip")
+	f, err := os.Create(filepath.Join(tmp, "test.zip"))
 	assert.NoError(err)
-	t.Logf("will store the zip at %s", file.Name())
+	defer f.Close()
+	archive := New(f)
 
-	empty, err := os.Create(folder + "/empty.txt")
-	assert.NoError(err)
+	assert.Error(archive.Add("nope.txt", "../testdata/nope.txt"))
+	assert.NoError(archive.Add("foo.txt", "../testdata/foo.txt"))
+	assert.NoError(archive.Add("sub1", "../testdata/sub1"))
+	assert.NoError(archive.Add("sub1/bar.txt", "../testdata/sub1/bar.txt"))
+	assert.NoError(archive.Add("sub1/sub2", "../testdata/sub1/sub2"))
+	assert.NoError(archive.Add("sub1/sub2/subfoo.txt", "../testdata/sub1/sub2/subfoo.txt"))
 
-	bin, err := os.Create(folder + "/binary")
-	assert.NoError(err)
-	assert.NoError(os.Chmod(bin.Name(), 0755))
-
-	assert.NoError(os.Mkdir(folder+"/folder-inside", 0755))
-
-	archive := New(file)
-	assert.NoError(archive.Add("empty.txt", empty.Name()))
-	assert.NoError(archive.Add("empty.txt", folder+"/folder-inside"))
-	assert.Error(archive.Add("dont.txt", empty.Name()+"_nope"))
-	assert.NoError(archive.Add("bin", bin.Name()))
 	assert.NoError(archive.Close())
+	assert.Error(archive.Add("tar.go", "tar.go"))
+	assert.NoError(f.Close())
+
+	t.Log(f.Name())
+	f, err = os.Open(f.Name())
+	assert.NoError(err)
+	stat, err := os.Stat(f.Name())
+	assert.NoError(err)
+	r, err := zip.NewReader(f, stat.Size())
+	var paths []string
+	for _, zf := range r.File {
+		paths = append(paths, zf.Name)
+	}
+	assert.Equal([]string{
+		"foo.txt",
+		"sub1/bar.txt",
+		"sub1/sub2/subfoo.txt",
+	}, paths)
 }
