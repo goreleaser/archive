@@ -20,14 +20,11 @@ func (a Archive) Close() error {
 	if err := a.tw.Close(); err != nil {
 		return err
 	}
-	if err := a.gw.Close(); err != nil {
-		return err
-	}
-	return nil
+	return a.gw.Close()
 }
 
 // New tar.gz archive
-func New(target *os.File) Archive {
+func New(target io.Writer) Archive {
 	gw := gzip.NewWriter(target)
 	tw := tar.NewWriter(gw)
 	return Archive{
@@ -37,28 +34,27 @@ func New(target *os.File) Archive {
 }
 
 // Add file to the archive
-func (a Archive) Add(name, path string) (err error) {
+func (a Archive) Add(name, path string) error {
 	file, err := os.Open(path)
 	if err != nil {
-		return
+		return err
 	}
-	defer func() {
-		_ = file.Close()
-	}()
-	stat, err := file.Stat()
-	if err != nil || stat.IsDir() {
-		return
+	defer file.Close() // nolint: errcheck
+	info, err := file.Stat()
+	if err != nil {
+		return err
 	}
-	header := new(tar.Header)
+	header, err := tar.FileInfoHeader(info, name)
+	if err != nil {
+		return err
+	}
 	header.Name = name
-	header.Size = stat.Size()
-	header.Mode = int64(stat.Mode())
-	header.ModTime = stat.ModTime()
-	if err := a.tw.WriteHeader(header); err != nil {
+	if err = a.tw.WriteHeader(header); err != nil {
 		return err
 	}
-	if _, err := io.Copy(a.tw, file); err != nil {
-		return err
+	if info.IsDir() {
+		return nil
 	}
-	return
+	_, err = io.Copy(a.tw, file)
+	return err
 }

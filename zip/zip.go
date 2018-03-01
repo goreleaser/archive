@@ -19,7 +19,7 @@ func (a Archive) Close() error {
 }
 
 // New zip archive
-func New(target *os.File) Archive {
+func New(target io.Writer) Archive {
 	return Archive{
 		z: zip.NewWriter(target),
 	}
@@ -31,21 +31,18 @@ func (a Archive) Add(name, path string) (err error) {
 	if err != nil {
 		return
 	}
-	stat, err := file.Stat()
-	if err != nil || stat.IsDir() {
+	defer file.Close() // nolint: errcheck
+	info, err := file.Stat()
+	if err != nil {
 		return
 	}
-	defer func() { _ = file.Close() }()
-
-	header, err := zip.FileInfoHeader(stat)
-	header.Method = zip.Deflate
+	if info.IsDir() {
+		return
+	}
+	w, err := a.z.Create(name)
 	if err != nil {
 		return err
 	}
-	f, err := a.z.CreateHeader(header)
-	if err != nil {
-		return err
-	}
-	_, err = io.Copy(f, file)
+	_, err = io.Copy(w, file)
 	return err
 }
