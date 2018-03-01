@@ -32,11 +32,11 @@ func (a Archive) Add(name, path string) (err error) {
 		return
 	}
 	defer file.Close() // nolint: errcheck
-	stat, err := file.Stat()
+	info, err := file.Stat()
 	if err != nil {
 		return
 	}
-	if stat.IsDir() {
+	if info.IsDir() {
 		return
 	}
 	w, err := a.z.Create(name)

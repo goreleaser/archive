@@ -35,6 +35,9 @@ func TestTarGzFile(t *testing.T) {
 	t.Log(f.Name())
 	f, err = os.Open(f.Name())
 	assert.NoError(err)
+	info, err := os.Stat(f.Name())
+	assert.NoError(err)
+	assert.Truef(info.Size() < 500, "archived file should be smaller than %d", info.Size())
 	gzf, err := gzip.NewReader(f)
 	assert.NoError(err)
 	var paths []string

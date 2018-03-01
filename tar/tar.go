@@ -40,11 +40,11 @@ func (a Archive) Add(name, path string) error {
 		return err
 	}
 	defer file.Close() // nolint: errcheck
-	stat, err := file.Stat()
+	info, err := file.Stat()
 	if err != nil {
 		return err
 	}
-	header, err := tar.FileInfoHeader(stat, name)
+	header, err := tar.FileInfoHeader(info, name)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (a Archive) Add(name, path string) error {
 	if err := a.tw.WriteHeader(header); err != nil {
 		return err
 	}
-	if stat.IsDir() {
+	if info.IsDir() {
 		return nil
 	}
 	_, err = io.Copy(a.tw, file)
