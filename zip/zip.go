@@ -31,11 +31,8 @@ func (a Archive) Add(name, path string) (err error) {
 	if err != nil {
 		return
 	}
+	defer file.Close() // nolint: errcheck
 	stat, err := file.Stat()
-	if err != nil || stat.IsDir() {
-		return
-	}
-	defer func() { _ = file.Close() }()
 
 	header, err := zip.FileInfoHeader(stat)
 	header.Method = zip.Deflate
@@ -45,6 +42,9 @@ func (a Archive) Add(name, path string) (err error) {
 	f, err := a.z.CreateHeader(header)
 	if err != nil {
 		return err
+	}
+	if err != nil || stat.IsDir() {
+		return
 	}
 	_, err = io.Copy(f, file)
 	return err
