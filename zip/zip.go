@@ -39,7 +39,12 @@ func (a Archive) Add(name, path string) (err error) {
 	if info.IsDir() {
 		return
 	}
-	w, err := a.z.Create(name)
+	header, err := zip.FileInfoHeader(info)
+	if err != nil {
+		return err
+	}
+	header.Name = name
+	w, err := a.z.CreateHeader(header)
 	if err != nil {
 		return err
 	}

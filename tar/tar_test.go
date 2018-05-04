@@ -25,6 +25,7 @@ func TestTarGzFile(t *testing.T) {
 	assert.NoError(archive.Add("foo.txt", "../testdata/foo.txt"))
 	assert.NoError(archive.Add("sub1", "../testdata/sub1"))
 	assert.NoError(archive.Add("sub1/bar.txt", "../testdata/sub1/bar.txt"))
+	assert.NoError(archive.Add("sub1/executable", "../testdata/sub1/executable"))
 	assert.NoError(archive.Add("sub1/sub2", "../testdata/sub1/sub2"))
 	assert.NoError(archive.Add("sub1/sub2/subfoo.txt", "../testdata/sub1/sub2/subfoo.txt"))
 
@@ -49,11 +50,16 @@ func TestTarGzFile(t *testing.T) {
 		}
 		assert.NoError(err)
 		paths = append(paths, next.Name)
+		t.Logf("%s: %v", next.Name, next.FileInfo().Mode())
+		if next.Name == "sub1/executable" {
+			assert.Equal("-rwxr-xr-x", next.FileInfo().Mode().String())
+		}
 	}
 	assert.Equal([]string{
 		"foo.txt",
 		"sub1",
 		"sub1/bar.txt",
+		"sub1/executable",
 		"sub1/sub2",
 		"sub1/sub2/subfoo.txt",
 	}, paths)
