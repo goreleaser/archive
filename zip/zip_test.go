@@ -2,6 +2,7 @@ package zip
 
 import (
 	"archive/zip"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -10,13 +11,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTarGzFile(t *testing.T) {
+func TestZipFile(t *testing.T) {
 	var assert = assert.New(t)
 	tmp, err := ioutil.TempDir("", "")
 	assert.NoError(err)
 	f, err := os.Create(filepath.Join(tmp, "test.zip"))
 	assert.NoError(err)
-	defer f.Close()
+	fmt.Println(f.Name())
+	defer f.Close() // nolint: errcheck
 	archive := New(f)
 
 	assert.Error(archive.Add("nope.txt", "../testdata/nope.txt"))
@@ -36,7 +38,7 @@ func TestTarGzFile(t *testing.T) {
 	assert.NoError(err)
 	info, err := f.Stat()
 	assert.NoError(err)
-	assert.Truef(info.Size() < 600, "archived file should be smaller than %d", info.Size())
+	assert.Truef(info.Size() < 900, "archived file should be smaller than %d", info.Size())
 	r, err := zip.NewReader(f, info.Size())
 	assert.NoError(err)
 	var paths []string
@@ -49,8 +51,10 @@ func TestTarGzFile(t *testing.T) {
 	}
 	assert.Equal([]string{
 		"foo.txt",
+		"sub1",
 		"sub1/bar.txt",
 		"sub1/executable",
+		"sub1/sub2",
 		"sub1/sub2/subfoo.txt",
 	}, paths)
 }
