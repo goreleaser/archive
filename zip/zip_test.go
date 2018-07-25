@@ -41,9 +41,9 @@ func TestZipFile(t *testing.T) {
 	assert.Truef(info.Size() < 900, "archived file should be smaller than %d", info.Size())
 	r, err := zip.NewReader(f, info.Size())
 	assert.NoError(err)
-	var paths []string
-	for _, zf := range r.File {
-		paths = append(paths, zf.Name)
+	var paths = make([]string, len(r.File))
+	for i, zf := range r.File {
+		paths[i] = zf.Name
 		t.Logf("%s: %v", zf.Name, zf.Mode())
 		if zf.Name == "sub1/executable" {
 			assert.Equal("-rwxr-xr-x", zf.Mode().String())
@@ -51,10 +51,8 @@ func TestZipFile(t *testing.T) {
 	}
 	assert.Equal([]string{
 		"foo.txt",
-		"sub1",
 		"sub1/bar.txt",
 		"sub1/executable",
-		"sub1/sub2",
 		"sub1/sub2/subfoo.txt",
 	}, paths)
 }

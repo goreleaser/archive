@@ -3,22 +3,21 @@ TEST_PATTERN?=.
 TEST_OPTIONS?=
 
 setup:
-	go get -u github.com/alecthomas/gometalinter
 	go get -u golang.org/x/tools/cmd/cover
-	go get -u -t ./...
-	gometalinter --install
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh
+	go get -u -t  ./...
 
 test:
 	go test $(TEST_OPTIONS) -v -coverpkg=./... -race -covermode=atomic -coverprofile=coverage.txt $(SOURCE_FILES) -run $(TEST_PATTERN) -timeout=2m
 
 cover: test
-	go tool cover -html=coverage.txt
+	go test $(TEST_OPTIONS) -failfast -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.txt $(SOURCE_FILES) -run $(TEST_PATTERN) -timeout=2m
 
 fmt:
 	find . -name '*.go' -not -wholename './vendor/*' | while read -r file; do gofmt -w -s "$$file"; goimports -w "$$file"; done
 
 lint:
-	gometalinter --vendor ./...
+	./bin/golangci-lint run --enable-all ./...
 
 ci: lint test
 
